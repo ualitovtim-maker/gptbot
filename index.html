@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Твоя идеальная съемка</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
+        :root {
+            --tg-vh: 1vh;
+        }
+
+        body {
+            background-color: #09090b;
+            color: #ffffff;
+            font-family: 'Inter', -apple-system, sans-serif;
+            margin: 0;
+            transition: background-color 0.3s ease;
+        }
+
+        /* =========================================
+           СТИЛИ ГЛАВНОЙ СТРАНИЦЫ (ТАРИФЫ)
+        ========================================= */
+        #main-page {
+            height: calc(var(--tg-vh, 1vh) * 100);
+            overflow: hidden; 
+            display: flex;
+            flex-direction: column;
+            padding: 0.75rem 1rem calc(0.75rem + env(safe-area-inset-bottom)) 1rem;
+        }
+
+        .ambient-bg {
+            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+            z-index: -1;
+            background: 
+                radial-gradient(circle at 15% 0%, rgba(37, 99, 235, 0.08) 0%, transparent 40%),
+                radial-gradient(circle at 85% 100%, rgba(16, 185, 129, 0.05) 0%, transparent 40%);
+        }
+
+        .tariff-card {
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 16px;
+            padding: 10px 14px; 
+            position: relative;
+            transition: all 0.3s ease;
+            overflow: hidden;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        @keyframes borderGlow {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        @keyframes pulseDots {
+            0% { opacity: 0.4; }
+            50% { opacity: 0.8; }
+            100% { opacity: 0.4; }
+        }
+
+        .card-selected {
+            background: rgba(15, 20, 15, 0.8);
+            border: 1px solid transparent;
+            transform: scale(1.01);
+        }
+
+        .card-selected::before {
+            content: ''; position: absolute; inset: -2px;
+            background: linear-gradient(90deg, #d97706, #10b981, #d97706);
+            background-size: 200% 200%; border-radius: 18px; z-index: -2;
+            animation: borderGlow 3s linear infinite;
+        }
+
+        .card-selected::after {
+            content: ''; position: absolute; inset: 1px;
+            background: #121214; border-radius: 15px; z-index: -1;
+        }
+
+        .dots-overlay {
+            position: absolute; inset: 0;
+            background-image: radial-gradient(rgba(217, 119, 6, 0.3) 1px, transparent 1px),
+                              radial-gradient(rgba(16, 185, 129, 0.3) 1px, transparent 1px);
+            background-size: 10px 10px; background-position: 0 0, 5px 5px;
+            z-index: 0; opacity: 0; transition: opacity 0.3s;
+            mask-image: radial-gradient(circle at center, black 10%, transparent 90%);
+        }
+
+        .card-selected .dots-overlay { opacity: 1; animation: pulseDots 2.5s ease-in-out infinite; }
+        .card-content { position: relative; z-index: 2; width: 100%; display: flex; justify-content: space-between; align-items: center; }
+        input[type="radio"] { display: none; }
+
+        .badge { font-size: 0.65rem; font-weight: 700; padding: 2px 6px; border-radius: 4px; text-transform: uppercase; margin-left: 6px; }
+        .badge-rec { background: #34c759; color: #fff; }
+        .badge-pro { background: #32ade6; color: #fff; }
+        .badge-vip { background: #ff9f0a; color: #fff; }
+
+        /* --- ОВЕРЛЕЙ ОПЛАТЫ --- */
+        #payment-overlay {
+            position: fixed; inset: 0;
+            background: rgba(0, 0, 0, 0.85); backdrop-filter: blur(15px);
+            z-index: 100; display: flex; flex-direction: column; align-items: center; justify-content: center;
+            opacity: 0; pointer-events: none; transition: opacity 0.4s ease;
+        }
+        #payment-overlay.active { opacity: 1; pointer-events: all; }
+
+        .loading-glow {
+            position: absolute; bottom: -50px; width: 100%; height: 200px;
+            background: linear-gradient(90deg, #d97706, #10b981, #3b82f6); filter: blur(80px); opacity: 0.5;
+            animation: pulseGlow 3s infinite alternate;
+        }
+
+        @keyframes pulseGlow { 0% { transform: scale(0.9); opacity: 0.4; } 100% { transform: scale(1.1); opacity: 0.7; } }
+
+        .spinner {
+            width: 40px; height: 40px; border: 3px solid rgba(255,255,255,0.1); border-top-color: #fff;
+            border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 16px;
+        }
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+        
+        .success-icon {
+            display: none; width: 46px; height: 46px; background: white; color: black; border-radius: 50%;
+            text-align: center; line-height: 46px; font-size: 22px; font-weight: bold; margin-bottom: 16px;
+        }
+
+        /* =========================================
+           СТИЛИ СТРАНИЦЫ ОФЕРТЫ (БЕЛАЯ)
+        ========================================= */
+        #offer-page {
+            display: none; /* Скрыта по умолчанию */
+            background-color: #ffffff;
+            color: #000000;
+            padding: 20px;
+            padding-bottom: 50px;
+            min-height: 100vh;
+            overflow-y: auto;
+        }
+
+        .back-btn {
+            display: inline-flex; align-items: center; gap: 8px;
+            background-color: #f1f5f9; color: #0f172a;
+            padding: 10px 16px; border: none; border-radius: 8px;
+            font-size: 15px; font-weight: 600; margin-bottom: 24px;
+            cursor: pointer; text-decoration: none; transition: background 0.2s;
+        }
+        .back-btn:active { background-color: #e2e8f0; }
+
+        .offer-content h1 { font-size: 20px; font-weight: 700; margin-bottom: 16px; text-align: center; }
+        .offer-content h2 { font-size: 16px; font-weight: 700; margin-top: 24px; margin-bottom: 8px; }
+        .offer-content p { font-size: 14px; margin-bottom: 12px; text-align: justify; line-height: 1.6; }
+        .offer-content .meta-info { font-size: 13px; color: #475569; margin-bottom: 24px; text-align: center; }
+    </style>
+</head>
+<body>
+
+    <!-- Эмбиент фон для главной страницы -->
+    <div id="ambient-bg" class="ambient-bg"></div>
+
+    <!-- Оверлей анимации оплаты -->
+    <div id="payment-overlay">
+        <div class="loading-glow"></div>
+        <div class="z-10 flex flex-col items-center">
+            <div class="spinner" id="loading-spinner"></div>
+            <div class="success-icon" id="success-icon">✓</div>
+            <h2 id="status-message" class="text-lg font-semibold text-white">Ожидание оплаты</h2>
+        </div>
+    </div>
+
+    <!-- ==========================================
+         ГЛАВНАЯ СТРАНИЦА (ТАРИФЫ) 
+    =========================================== -->
+    <div id="main-page">
+        <!-- Заголовок -->
+        <div class="mb-4 mt-2 flex-none">
+            <h1 class="text-[22px] font-bold tracking-tight mb-0.5">Твоя идеальная съемка<br>за 1 минуту</h1>
+            <p class="text-slate-400 text-[11px]">Фотографии, которыми хочется делиться</p>
+        </div>
+
+        <!-- Сетка тарифов -->
+        <div class="flex-1 flex flex-col justify-center space-y-2.5">
+            <!-- 1. Новичок -->
+            <label class="block cursor-pointer">
+                <input type="radio" name="tariff" value="299" data-tokens="15" onchange="selectTariff(this)">
+                <div class="tariff-card">
+                    <div class="dots-overlay"></div>
+                    <div class="card-content">
+                        <div>
+                            <div class="text-[11px] text-slate-400 mb-0.5">Новичок</div>
+                            <div class="text-lg font-bold">15 изображений</div>
+                        </div>
+                        <div class="text-xl font-bold">299 ₽</div>
+                    </div>
+                </div>
+            </label>
+
+            <!-- 2. Базовый -->
+            <label class="block cursor-pointer">
+                <input type="radio" name="tariff" value="399" data-tokens="25" onchange="selectTariff(this)">
+                <div class="tariff-card">
+                    <div class="dots-overlay"></div>
+                    <div class="card-content">
+                        <div>
+                            <div class="text-[11px] text-slate-400 mb-0.5">Базовый</div>
+                            <div class="text-lg font-bold">25 изображений</div>
+                        </div>
+                        <div class="text-xl font-bold">399 ₽</div>
+                    </div>
+                </div>
+            </label>
+
+            <!-- 3. Стандарт -->
+            <label class="block cursor-pointer">
+                <input type="radio" name="tariff" value="979" data-tokens="75" onchange="selectTariff(this)" checked>
+                <div class="tariff-card card-selected">
+                    <div class="dots-overlay"></div>
+                    <div class="card-content">
+                        <div>
+                            <div class="flex items-center mb-0.5">
+                                <span class="text-[11px] text-slate-300">🙊 Стандарт</span>
+                                <span class="badge badge-rec">Рекомендуем</span>
+                            </div>
+                            <div class="text-lg font-bold">75 изображений</div>
+                        </div>
+                        <div class="text-xl font-bold">979 ₽</div>
+                    </div>
+                </div>
+            </label>
+
+            <!-- 4. Продвинутый -->
+            <label class="block cursor-pointer">
+                <input type="radio" name="tariff" value="1650" data-tokens="150" onchange="selectTariff(this)">
+                <div class="tariff-card">
+                    <div class="dots-overlay"></div>
+                    <div class="card-content">
+                        <div>
+                            <div class="flex items-center mb-0.5">
+                                <span class="text-[11px] text-slate-300">🔥 Продвинутый</span>
+                                <span class="badge badge-pro">Удобно</span>
+                            </div>
+                            <div class="text-lg font-bold">150 изображений</div>
+                        </div>
+                        <div class="text-xl font-bold">1 650 ₽</div>
+                    </div>
+                </div>
+            </label>
+
+            <!-- 5. Генератор -->
+            <label class="block cursor-pointer">
+                <input type="radio" name="tariff" value="2690" data-tokens="300" onchange="selectTariff(this)">
+                <div class="tariff-card">
+                    <div class="dots-overlay"></div>
+                    <div class="card-content">
+                        <div>
+                            <div class="flex items-center mb-0.5">
+                                <span class="text-[11px] text-slate-300">💎 Генератор</span>
+                                <span class="badge badge-vip">ВИП</span>
+                            </div>
+                            <div class="text-lg font-bold">300 изображений</div>
+                        </div>
+                        <div class="text-xl font-bold">2 690 ₽</div>
+                    </div>
+                </div>
+            </label>
+        </div>
+
+        <!-- Буллиты преимуществ -->
+        <div class="mt-4 mb-4 space-y-1.5 flex-none">
+            <div class="flex items-center gap-2">
+                <div class="text-[#0ea5e9] text-[13px] leading-none">✦</div>
+                <p class="text-[10px] text-slate-300 font-medium leading-tight">Создавай виральный контент за минуты</p>
+            </div>
+            <div class="flex items-center gap-2">
+                <div class="text-[#0ea5e9] text-[13px] leading-none">✦</div>
+                <p class="text-[10px] text-slate-300 font-medium leading-tight">Забудь про обработку: идеальный свет и кожа на каждом кадре</p>
+            </div>
+            <div class="flex items-center gap-2">
+                <div class="text-[#0ea5e9] text-[13px] leading-none">✦</div>
+                <p class="text-[10px] text-slate-300 font-medium leading-tight">Выгляди на миллион: премиальные образы без затрат на стилистов</p>
+            </div>
+            <div class="flex items-center gap-2">
+                <div class="text-[#0ea5e9] text-[13px] leading-none">✦</div>
+                <p class="text-[10px] text-slate-300 font-medium leading-tight">Разовая оплата, без подписок и автоматических списаний</p>
+            </div>
+        </div>
+
+        <!-- Кнопка и Футер -->
+        <div class="flex-none">
+            <button onclick="startPaymentProcess()" class="w-full bg-[#007aff] text-white font-semibold text-[15px] py-3.5 rounded-xl mb-3 active:scale-[0.98] transition-transform shadow-[0_4px_15px_rgba(0,122,255,0.3)]">
+                Перейти к оплате
+            </button>
+            <div class="text-center text-[9px] text-slate-500 leading-tight px-2">
+                Оплачивая, вы соглашаетесь с условиями 
+                <!-- КЛИК ПО ОФЕРТЕ ОТКРЫВАЕТ ЕЁ ТУТ ЖЕ -->
+                <a href="#" onclick="showOffer(); return false;" class="underline text-slate-400">публичной оферты</a>.<br>
+                <span class="block mt-1 opacity-60">Самозанятый Малофеева Екатерина Александровна | ИНН 730401519698</span>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- ==========================================
+         СТРАНИЦА ОФЕРТЫ (БЕЛАЯ) 
+    =========================================== -->
+    <div id="offer-page">
+        <!-- Кнопка "Назад" возвращает на страницу оплаты -->
+        <button onclick="hideOffer()" class="back-btn">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+            Назад к тарифам
+        </button>
+
+        <div class="offer-content">
+            <h1>Оферта на предоставление услуг сервиса [ВСТАВИТЬ НАЗВАНИЕ]</h1>
+            
+            <div class="meta-info">
+                <strong>Адрес размещения в сети Интернет:</strong> [ВСТАВИТЬ ССЫЛКУ НА ПРИЛОЖЕНИЕ/САЙТ]<br>
+                <strong>Дата обновления:</strong> [ВСТАВИТЬ ДАТУ]
+            </div>
+
+            <h2>1. Общие положения</h2>
+            <p>Настоящий документ, далее именуемый «Офертой», представляет собой публичное предложение от Самозанятого Малофеевой Екатерины Александровны (ИНН: 730401519698), далее также упоминаемого как «Компания», «Исполнитель», «Мы», заключить договор на предоставление услуг с правоспособным и дееспособным физическим лицом, акцептовавшим данное предложение, далее именуемым «Пользователь», «Вы», «Заказчик».</p>
+
+            <h2>2. Предмет Оферты</h2>
+            <p>2.1. Компания предоставляет Пользователю услуги, связанные с предоставлением доступа к сервису [ВСТАВИТЬ НАЗВАНИЕ СЕРВИСА], далее именуемыми «Услугами», а Заказчик обязуется оплатить указанные Услуги в порядке и на условиях, установленных настоящей Оферты, в соответствии с условиями и тарифным планом.</p>
+            <p>2.2. Под Услугами, предоставляемыми Пользователю в рамках сервиса [ВСТАВИТЬ НАЗВАНИЕ СЕРВИСА], подразумевается предоставление доступа к следующим функциональные возможностям:</p>
+            <p>2.2.1. Модели искусственного интеллекта для обработки естественного языка;</p>
+            <p>2.2.2. Генеративные модели искусственного интеллекта;</p>
+            <p>2.2.3. Диффузионные модели искусственного интеллекта.</p>
+            <p>Перечень функциональных возможностей может меняться и расширяться.</p>
+            <p>2.3. С помощью [ВСТАВИТЬ НАЗВАНИЕ СЕРВИСА] Заказчик имеет возможность заказывать у Сервиса изображения и другие виды контента в различных нейросетях, а также использовать полученные материалы в личных и/или коммерческих целях, при условии соблюдения всех условий настоящего договора и законодательства.</p>
+            <p>2.4. Оказание услуг осуществляется Исполнителем дистанционно через Платформу, доступную посредством мессенджера Telegram, по адресу: [ВСТАВИТЬ ССЫЛКУ НА БОТА], с авторизацией исключительно через Telegram-аккаунт.</p>
+
+            <h2>3. Акцепт Оферты и заключение договора</h2>
+            <p>3.1. Договор признается заключенным с момента акцепта настоящей Оферты Пользователем. Под акцептом настоящей Оферты понимается факт оплаты в соответствии с условиями тарифов, что одновременно считается выражением согласия Пользователя с Условиями Предоставления Услуг и принятия на себя обязанности их соблюдать.</p>
+            <p>3.2. Заключая договор, Пользователь подтверждает следующее:</p>
+            <p>а) Пользователь целиком и полностью ознакомлен, и согласен с условиями настоящей Оферты;</p>
+            <p>б) Пользователь дает разрешение на сбор, обработку и передачу персональных данных на условиях, определенных в Политике обработки персональных данных, размещенной на интернет-сайте [ВСТАВИТЬ ССЫЛКУ НА ПОЛИТИКУ]</p>
+
+            <h2>4. Стоимость и Порядок расчетов</h2>
+            <p>4.1. Цена на Услуги указана на сайте [ВСТАВИТЬ ССЫЛКУ НА ТАРИФЫ] в разделе Тарифы (или непосредственно в интерфейсе бота).</p>
+            <p>4.2. Услуги предоставляются на основе предоплаты, согласно выбранному Пользователем тарифному плану. С момента активации тарифа начинается оказание Услуг.</p>
+            <p>4.3. Обработка, безопасность и надёжность платежей обеспечиваются платёжным партнёром — ЮKassa (ООО НКО «ЮКасса»).</p>
+            <p>4.4. Компания вправе по своему усмотрению предоставлять стимулирующие скидки на стоимость Услуг.</p>
+
+            <h2>6. Форс-мажор</h2>
+            <p>6.1. В случае возникновения форс-мажорных обстоятельств, которые препятствуют надлежащему исполнению обязательств по настоящему Договору, Стороны освобождаются от ответственности за неисполнение или ненадлежащее исполнение обязательств на срок действия этих обстоятельств.</p>
+            <p>6.2. Особые обстоятельства, такие как блокировка Услуг решением государственных органов (например, Роскомнадзор), являются форс-мажорными и освобождают Компанию от ответственности за невозможность дальнейшего оказания Услуг и от возврата стоимости.</p>
+
+            <h2>7. Условия Предоставления Услуг и Ответственность Сторон</h2>
+            <p>7.1. За неисполнение или ненадлежащее исполнение обязательств по настоящему Договору каждая из Сторон несет ответственность в соответствии с действующим законодательством Российской Федерации.</p>
+            <p>7.2. Исполнитель не несет ответственности за то, что Услуги могут не оправдать ожидания Заказчика, а также за его личную оценку качества предоставленных Услуг, если эти ожидания не были явно заявлены и согласованы в рамках этого Договора.</p>
+            <p>7.3. Исполнитель не несет ответственности за качество работы общественных каналов связи или сервисов, через которые Заказчик получает доступ к Услугам, в том числе за сбои в интернет-соединении, технические неполадки или отсутствие доступа, вызванные сторонними провайдерами.</p>
+            <p>7.4. Пользователь несет ответственность за все действия, совершенные через его аккаунт. Пользователь несет ответственность за проверку и использование информации, полученной от [ВСТАВИТЬ НАЗВАНИЕ СЕРВИСА], и делает это на свой страх и риск. В случае, если информация будет использована ненадлежащим образом, Исполнитель не несет ответственности за возможные убытки или последствия.</p>
+            <p>7.5. Заказчик обязуется использовать Услуги [ВСТАВИТЬ НАЗВАНИЕ СЕРВИСА] в соответствии с действующими законами Российской Федерации, нормативными актами и этическими стандартами, а также соблюдать требования конфиденциальности и безопасности информации.</p>
+            <p>7.6. Заказчик обязуется возместить Исполнителю все убытки, включая расходы на судебные и правовые издержки, которые могут возникнуть в результате нарушения Заказчиком условий настоящего Договора.</p>
+            <p>7.7. Заказчик самостоятельно обеспечивает полное и своевременное ознакомление с условиями настоящей Оферты, а также функциональными возможностями [ВСТАВИТЬ НАЗВАНИЕ СЕРВИСА]. Исполнитель освобождается от какой-либо ответственности за убытки, ограничения, негативные последствия либо иные неблагоприятные результаты, возникшие вследствие неполного, несвоевременного либо ненадлежащего ознакомления Заказчика с указанными документами и функционалом.</p>
+            <p>7.8. Ответственность Компании во всех случаях ограничивается суммой, уплаченной Пользователем за Услуги.</p>
+
+            <h2>8. Заключительные положения</h2>
+            <p>8.1. Предоставляя свои платёжные данные и используя Услуги, Вы безоговорочно принимаете условия настоящей Оферты и обязуетесь их выполнять.</p>
+            <p>8.2. Компания оставляет за собой право изменения условий Оферты без предварительного согласования с Пользователем.</p>
+
+            <h2>9. Контактная информация</h2>
+            <p>В случае возникновения вопросов, связанных с условиями Оферты, Вы можете обратиться в службу поддержки Компании по следующим контактным данным: [ВСТАВИТЬ КОНТАКТЫ ПОДДЕРЖКИ]</p>
+            <p>На момент публикации настоящего документа Вы подтверждаете, что ознакомлены со всеми его пунктами, полностью осознаете и принимаете условия предоставления Услуг.</p>
+        </div>
+    </div>
+
+    <!-- ==========================================
+         СКРИПТЫ И ЛОГИКА
+    =========================================== -->
+    <script>
+        const tg = window.Telegram.WebApp;
+        tg.expand();
+        tg.setHeaderColor('#09090b');
+        tg.setBackgroundColor('#09090b');
+
+        // Фикс высоты экрана для Telegram WebApp
+        function setViewportHeight() {
+            let vh = window.innerHeight * 0.01;
+            if (tg.viewportHeight) {
+                vh = tg.viewportHeight * 0.01;
+            }
+            document.documentElement.style.setProperty('--tg-vh', `${vh}px`);
+        }
+        window.addEventListener('resize', setViewportHeight);
+        tg.onEvent('viewportChanged', setViewportHeight);
+        setViewportHeight();
+
+        // Функция переключения карточек
+        function selectTariff(radio) {
+            document.querySelectorAll('.tariff-card').forEach(card => {
+                card.classList.remove('card-selected');
+            });
+            const selectedCard = radio.nextElementSibling;
+            selectedCard.classList.add('card-selected');
+            if(tg.HapticFeedback) tg.HapticFeedback.selectionChanged();
+        }
+
+        // ===============================================
+        // ЛОГИКА ПЕРЕКЛЮЧЕНИЯ ЭКРАНОВ (ОДИН ФАЙЛ)
+        // ===============================================
+        function showOffer() {
+            // Прячем главную
+            document.getElementById('main-page').style.display = 'none';
+            document.getElementById('ambient-bg').style.display = 'none';
+            // Показываем оферту
+            document.getElementById('offer-page').style.display = 'block';
+            
+            // Меняем цвета рамки Телеграма и фона на светлые
+            document.body.style.backgroundColor = '#ffffff';
+            tg.setHeaderColor('#ffffff');
+            tg.setBackgroundColor('#ffffff');
+            
+            // Скроллим в самый верх
+            window.scrollTo(0, 0);
+        }
+
+        function hideOffer() {
+            // Прячем оферту
+            document.getElementById('offer-page').style.display = 'none';
+            // Показываем главную
+            document.getElementById('main-page').style.display = 'flex';
+            document.getElementById('ambient-bg').style.display = 'block';
+            
+            // Возвращаем темные цвета
+            document.body.style.backgroundColor = '#09090b';
+            tg.setHeaderColor('#09090b');
+            tg.setBackgroundColor('#09090b');
+            
+            window.scrollTo(0, 0);
+        }
+
+        // Анимация оплаты
+        async function startPaymentProcess() {
+            if(tg.HapticFeedback) tg.HapticFeedback.impactOccurred('medium');
+            
+            const overlay = document.getElementById('payment-overlay');
+            const spinner = document.getElementById('loading-spinner');
+            const successIcon = document.getElementById('success-icon');
+            const statusMsg = document.getElementById('status-message');
+            
+            overlay.classList.add('active');
+            
+            // Имитация ожидания ответа от ЮKassa
+            await new Promise(resolve => setTimeout(resolve, 2000));
+            
+            spinner.style.display = 'none';
+            successIcon.style.display = 'block';
+            statusMsg.innerText = 'Оплата прошла успешно';
+            
+            if(tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('success');
+            
+            // Закрываем окно через секунду
+            setTimeout(() => {
+                tg.close();
+            }, 1200);
+        }
+    </script>
+</body>
+</html>
