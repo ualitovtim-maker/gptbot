@@ -328,13 +328,16 @@
             const tokens = parseInt(selectedRadio.dataset.tokens);
 
             try {
-                // ВАЖНО: ВСТАВЬ СЮДА СВОЮ ССЫЛКУ NGROK ИЛИ СЕРВЕРА
+                // Ссылка от твоего Ngrok
                 const BACKEND_URL = 'https://overfull-ebony-frequency.ngrok-free.dev';
 
-                // 1. Отправляем запрос боту на генерацию чека ЮKassa
+                // 1. Отправляем запрос боту на генерацию чека ЮKassa (с обходом защиты ngrok)
                 const createRes = await fetch(`${BACKEND_URL}/api/create_payment`, {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'ngrok-skip-browser-warning': 'true' // Исправляет ошибку сервера
+                    },
                     body: JSON.stringify({ user_id: userId, price: price, tokens: tokens })
                 });
 
@@ -345,12 +348,16 @@
                 tg.openLink(data.payment_url);
                 statusMsg.innerText = 'Ожидание оплаты...';
                 
-                // 3. Цикл проверки (Polling). Каждые 3 секунды спрашиваем бота
+                // 3. Цикл проверки. Каждые 3 секунды спрашиваем бота (с обходом защиты ngrok)
                 let isPaid = false;
                 while (!isPaid) {
                     await new Promise(r => setTimeout(r, 3000));
                     
-                    const checkRes = await fetch(`${BACKEND_URL}/api/check_payment?payment_id=${data.payment_id}`);
+                    const checkRes = await fetch(`${BACKEND_URL}/api/check_payment?payment_id=${data.payment_id}`, {
+                        headers: {
+                            'ngrok-skip-browser-warning': 'true' // Исправляет ошибку сервера
+                        }
+                    });
                     const checkData = await checkRes.json();
                     
                     if (checkData.status === 'succeeded') {
