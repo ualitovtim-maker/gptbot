@@ -71,9 +71,9 @@
         .badge-vip { background: #ff9f0a; color: #fff; }
 
         #payment-overlay {
-            position: fixed; inset: 0; background: rgba(0, 0, 0, 0.85); backdrop-filter: blur(15px);
+            position: fixed; inset: 0; background: rgba(0, 0, 0, 0.9); backdrop-filter: blur(15px);
             z-index: 100; display: flex; flex-direction: column; align-items: center; justify-content: center;
-            opacity: 0; pointer-events: none; transition: opacity 0.4s ease;
+            opacity: 0; pointer-events: none; transition: opacity 0.4s ease; text-align: center; padding: 20px;
         }
         #payment-overlay.active { opacity: 1; pointer-events: all; }
 
@@ -90,9 +90,16 @@
         }
         @keyframes spin { 100% { transform: rotate(360deg); } }
         
-        .success-icon {
-            display: none; width: 46px; height: 46px; background: white; color: black; border-radius: 50%;
+        .success-icon, .error-icon {
+            display: none; width: 46px; height: 46px; border-radius: 50%;
             text-align: center; line-height: 46px; font-size: 22px; font-weight: bold; margin-bottom: 16px;
+        }
+        .success-icon { background: white; color: black; }
+        .error-icon { background: #ff3b30; color: white; }
+
+        #close-error-btn {
+            display: none; margin-top: 20px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2);
+            color: white; padding: 10px 24px; border-radius: 8px; font-weight: 600; cursor: pointer;
         }
 
         #offer-page {
@@ -104,11 +111,6 @@
             padding: 10px 16px; border: none; border-radius: 8px; font-size: 15px; font-weight: 600;
             margin-bottom: 24px; cursor: pointer; text-decoration: none; transition: background 0.2s;
         }
-        .back-btn:active { background-color: #e2e8f0; }
-        .offer-content h1 { font-size: 20px; font-weight: 700; margin-bottom: 16px; text-align: center; }
-        .offer-content h2 { font-size: 16px; font-weight: 700; margin-top: 24px; margin-bottom: 8px; }
-        .offer-content p { font-size: 14px; margin-bottom: 12px; text-align: justify; line-height: 1.6; }
-        .offer-content .meta-info { font-size: 13px; color: #475569; margin-bottom: 24px; text-align: center; }
     </style>
 </head>
 <body>
@@ -117,10 +119,13 @@
 
     <div id="payment-overlay">
         <div class="loading-glow"></div>
-        <div class="z-10 flex flex-col items-center">
+        <div class="z-10 flex flex-col items-center w-full">
             <div class="spinner" id="loading-spinner"></div>
             <div class="success-icon" id="success-icon">✓</div>
-            <h2 id="status-message" class="text-lg font-semibold text-white">Ожидание оплаты</h2>
+            <div class="error-icon" id="error-icon">!</div>
+            <h2 id="status-message" class="text-lg font-semibold text-white mb-2">Ожидание оплаты</h2>
+            <p id="status-detail" class="text-sm text-slate-400 max-w-xs"></p>
+            <button id="close-error-btn" onclick="closeOverlay()">Закрыть и попробовать еще</button>
         </div>
     </div>
 
@@ -228,10 +233,6 @@
                 <div class="text-[#0ea5e9] text-[13px] leading-none">✦</div>
                 <p class="text-[10px] text-slate-300 font-medium leading-tight">Выгляди на миллион: премиальные образы без затрат на стилистов</p>
             </div>
-            <div class="flex items-center gap-2">
-                <div class="text-[#0ea5e9] text-[13px] leading-none">✦</div>
-                <p class="text-[10px] text-slate-300 font-medium leading-tight">Разовая оплата, без подписок и автоматических списаний</p>
-            </div>
         </div>
 
         <div class="flex-none">
@@ -272,7 +273,6 @@
         </div>
     </div>
 
-    <!-- СКРИПТЫ -->
     <script>
         const tg = window.Telegram.WebApp;
         tg.expand();
@@ -314,6 +314,23 @@
             window.scrollTo(0, 0);
         }
 
+        function showError(title, desc) {
+            document.getElementById('loading-spinner').style.display = 'none';
+            document.getElementById('error-icon').style.display = 'block';
+            document.getElementById('status-message').innerText = title;
+            document.getElementById('status-detail').innerText = desc;
+            document.getElementById('close-error-btn').style.display = 'block';
+            if(tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('error');
+        }
+
+        function closeOverlay() {
+            document.getElementById('payment-overlay').classList.remove('active');
+            document.getElementById('error-icon').style.display = 'none';
+            document.getElementById('close-error-btn').style.display = 'none';
+            document.getElementById('loading-spinner').style.display = 'block';
+            document.getElementById('status-detail').innerText = '';
+        }
+
         async function startPaymentProcess() {
             if(tg.HapticFeedback) tg.HapticFeedback.impactOccurred('medium');
             
@@ -321,11 +338,23 @@
             const spinner = document.getElementById('loading-spinner');
             const successIcon = document.getElementById('success-icon');
             const statusMsg = document.getElementById('status-message');
+            const statusDetail = document.getElementById('status-detail');
+            
+            document.getElementById('error-icon').style.display = 'none';
+            document.getElementById('close-error-btn').style.display = 'none';
+            spinner.style.display = 'block';
+            successIcon.style.display = 'none';
             
             statusMsg.innerText = 'Создание платежа...';
+            statusDetail.innerText = '';
             overlay.classList.add('active');
             
-            const userId = tg.initDataUnsafe?.user?.id || 0; 
+            const userId = tg.initDataUnsafe?.user?.id;
+            if (!userId) {
+                showError('Ошибка авторизации', 'Запустите оплату прямо из бота.');
+                return;
+            }
+            
             const selectedRadio = document.querySelector('input[name="tariff"]:checked');
             const price = parseFloat(selectedRadio.value);
             const tokens = parseInt(selectedRadio.dataset.tokens);
@@ -341,34 +370,48 @@
                 });
 
                 const data = await createRes.json();
-                if (!data.payment_url || !data.payment_id) throw new Error("Ошибка создания платежа");
+                if (!data.payment_url || !data.payment_id) {
+                    throw new Error("Не удалось создать счет.");
+                }
 
                 tg.openLink(data.payment_url);
                 statusMsg.innerText = 'Ожидание оплаты...';
+                statusDetail.innerText = 'Если вы оплатили, подождите пару секунд.';
                 
                 let isPaid = false;
-                while (!isPaid) {
+                let attempts = 0;
+                
+                // Проверяем статус в фоне. Ошибки интернета игнорируем.
+                while (!isPaid && attempts < 100) { 
                     await new Promise(r => setTimeout(r, 3000));
-                    
-                    const checkRes = await fetch(`${BACKEND_URL}/api/check_payment?payment_id=${data.payment_id}`);
-                    const checkData = await checkRes.json();
-                    
-                    if (checkData.status === 'succeeded') {
-                        isPaid = true; 
+                    attempts++;
+                    try {
+                        const checkRes = await fetch(`${BACKEND_URL}/api/check_payment?payment_id=${data.payment_id}`);
+                        if (checkRes.ok) {
+                            const checkData = await checkRes.json();
+                            if (checkData.status === 'succeeded') {
+                                isPaid = true; 
+                            }
+                        }
+                    } catch (e) {
+                        console.log("Ожидание сети..."); // Игнорируем обрывы
                     }
                 }
                 
-                spinner.style.display = 'none';
-                successIcon.style.display = 'block';
-                statusMsg.innerText = 'Оплата прошла успешно';
-                if(tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('success');
-                
-                setTimeout(() => { tg.close(); }, 1500);
+                if (isPaid) {
+                    spinner.style.display = 'none';
+                    successIcon.style.display = 'block';
+                    statusMsg.innerText = 'Оплата успешно завершена!';
+                    statusDetail.innerText = 'Окно закроется автоматически.';
+                    if(tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('success');
+                    
+                    setTimeout(() => { tg.close(); }, 2000);
+                } else {
+                    showError('Время ожидания истекло', 'Мы не получили подтверждение оплаты.');
+                }
 
             } catch (error) {
-                console.error(error);
-                tg.showAlert("Произошла ошибка при соединении с сервером.");
-                overlay.classList.remove('active');
+                showError('Ошибка соединения', 'Произошел сбой при создании платежа. Убедитесь в стабильности интернет-соединения.');
             }
         }
     </script>
