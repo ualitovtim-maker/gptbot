@@ -66,6 +66,7 @@
 
         .badge { font-size: 0.65rem; font-weight: 700; padding: 2px 6px; border-radius: 4px; text-transform: uppercase; margin-left: 6px; }
         .badge-rec { background: #34c759; color: #fff; }
+        .badge-eco { background: #10b981; color: #fff; }
         .badge-pro { background: #32ade6; color: #fff; }
         .badge-vip { background: #ff9f0a; color: #fff; }
 
@@ -132,7 +133,7 @@
 
         <div class="flex-1 flex flex-col justify-center space-y-2.5">
             <label class="block cursor-pointer">
-                <input type="radio" name="tariff" value="299" data-tokens="15" onchange="selectTariff(this)">
+                <input type="radio" name="tariff" value="490" data-tokens="15" onchange="selectTariff(this)">
                 <div class="tariff-card">
                     <div class="dots-overlay"></div>
                     <div class="card-content">
@@ -140,72 +141,75 @@
                             <div class="text-[11px] text-slate-400 mb-0.5">Новичок</div>
                             <div class="text-lg font-bold">15 изображений</div>
                         </div>
-                        <div class="text-xl font-bold">299 ₽</div>
+                        <div class="text-xl font-bold">490 ₽</div>
                     </div>
                 </div>
             </label>
 
             <label class="block cursor-pointer">
-                <input type="radio" name="tariff" value="399" data-tokens="25" onchange="selectTariff(this)">
+                <input type="radio" name="tariff" value="749" data-tokens="25" onchange="selectTariff(this)">
                 <div class="tariff-card">
                     <div class="dots-overlay"></div>
                     <div class="card-content">
                         <div>
-                            <div class="text-[11px] text-slate-400 mb-0.5">Базовый</div>
+                            <div class="flex items-center mb-0.5">
+                                <span class="text-[11px] text-slate-300">Базовый</span>
+                                <span class="badge badge-eco">Экономия 8%</span>
+                            </div>
                             <div class="text-lg font-bold">25 изображений</div>
                         </div>
-                        <div class="text-xl font-bold">399 ₽</div>
+                        <div class="text-xl font-bold">749 ₽</div>
                     </div>
                 </div>
             </label>
 
             <label class="block cursor-pointer">
-                <input type="radio" name="tariff" value="979" data-tokens="75" onchange="selectTariff(this)" checked>
+                <input type="radio" name="tariff" value="1790" data-tokens="75" onchange="selectTariff(this)" checked>
                 <div class="tariff-card card-selected">
                     <div class="dots-overlay"></div>
                     <div class="card-content">
                         <div>
                             <div class="flex items-center mb-0.5">
                                 <span class="text-[11px] text-slate-300">🙊 Стандарт</span>
-                                <span class="badge badge-rec">Рекомендуем</span>
+                                <span class="badge badge-rec">Экономия 27%</span>
                             </div>
                             <div class="text-lg font-bold">75 изображений</div>
                         </div>
-                        <div class="text-xl font-bold">979 ₽</div>
+                        <div class="text-xl font-bold">1 790 ₽</div>
                     </div>
                 </div>
             </label>
 
             <label class="block cursor-pointer">
-                <input type="radio" name="tariff" value="1650" data-tokens="150" onchange="selectTariff(this)">
+                <input type="radio" name="tariff" value="2999" data-tokens="150" onchange="selectTariff(this)">
                 <div class="tariff-card">
                     <div class="dots-overlay"></div>
                     <div class="card-content">
                         <div>
                             <div class="flex items-center mb-0.5">
                                 <span class="text-[11px] text-slate-300">🔥 Продвинутый</span>
-                                <span class="badge badge-pro">Удобно</span>
+                                <span class="badge badge-pro">Экономия 39%</span>
                             </div>
                             <div class="text-lg font-bold">150 изображений</div>
                         </div>
-                        <div class="text-xl font-bold">1 650 ₽</div>
+                        <div class="text-xl font-bold">2 999 ₽</div>
                     </div>
                 </div>
             </label>
 
             <label class="block cursor-pointer">
-                <input type="radio" name="tariff" value="2690" data-tokens="300" onchange="selectTariff(this)">
+                <input type="radio" name="tariff" value="5490" data-tokens="300" onchange="selectTariff(this)">
                 <div class="tariff-card">
                     <div class="dots-overlay"></div>
                     <div class="card-content">
                         <div>
                             <div class="flex items-center mb-0.5">
                                 <span class="text-[11px] text-slate-300">💎 Генератор</span>
-                                <span class="badge badge-vip">ВИП</span>
+                                <span class="badge badge-vip">Экономия 44%</span>
                             </div>
                             <div class="text-lg font-bold">300 изображений</div>
                         </div>
-                        <div class="text-xl font-bold">2 690 ₽</div>
+                        <div class="text-xl font-bold">5 490 ₽</div>
                     </div>
                 </div>
             </label>
@@ -249,16 +253,16 @@
             Назад к тарифам
         </button>
         <div class="offer-content">
-            <h1>Оферта на предоставление услуг сервиса [ВСТАВИТЬ НАЗВАНИЕ]</h1>
+            <h1>Оферта на предоставление услуг сервиса Saxar AI</h1>
             <div class="meta-info">
-                <strong>Адрес размещения в сети Интернет:</strong> [ВСТАВИТЬ ССЫЛКУ НА ПРИЛОЖЕНИЕ/САЙТ]<br>
-                <strong>Дата обновления:</strong> [ВСТАВИТЬ ДАТУ]
+                <strong>Адрес размещения в сети Интернет:</strong> https://t.me/saxarai_bot<br>
+                <strong>Дата обновления:</strong> 17.10.2026
             </div>
             <h2>1. Общие положения</h2>
             <p>Настоящий документ, далее именуемый «Офертой», представляет собой публичное предложение от Самозанятого Малофеевой Екатерины Александровны (ИНН: 730401519698), далее также упоминаемого как «Компания», «Исполнитель», «Мы», заключить договор на предоставление услуг с правоспособным и дееспособным физическим лицом, акцептовавшим данное предложение, далее именуемым «Пользователь», «Вы», «Заказчик».</p>
             <h2>2. Предмет Оферты</h2>
-            <p>2.1. Компания предоставляет Пользователю услуги, связанные с предоставлением доступа к сервису [ВСТАВИТЬ НАЗВАНИЕ СЕРВИСА], далее именуемыми «Услугами», а Заказчик обязуется оплатить указанные Услуги в порядке и на условиях, установленных настоящей Оферты, в соответствии с условиями и тарифным планом.</p>
-            <p>2.2. Под Услугами, предоставляемыми Пользователю в рамках сервиса [ВСТАВИТЬ НАЗВАНИЕ СЕРВИСА], подразумевается предоставление доступа к следующим функциональные возможностям: Генеративные и диффузионные модели искусственного интеллекта.</p>
+            <p>2.1. Компания предоставляет Пользователю услуги, связанные с предоставлением доступа к сервису Saxar AI, далее именуемыми «Услугами», а Заказчик обязуется оплатить указанные Услуги в порядке и на условиях, установленных настоящей Оферты, в соответствии с условиями и тарифным планом.</p>
+            <p>2.2. Под Услугами, предоставляемыми Пользователю в рамках сервиса Saxar AI, подразумевается предоставление доступа к следующим функциональным возможностям: Генеративные и диффузионные модели искусственного интеллекта.</p>
             <h2>3. Акцепт Оферты и заключение договора</h2>
             <p>3.1. Договор признается заключенным с момента акцепта настоящей Оферты Пользователем. Под акцептом понимается факт оплаты тарифов.</p>
             <h2>4. Стоимость и Порядок расчетов</h2>
@@ -310,7 +314,6 @@
             window.scrollTo(0, 0);
         }
 
-        // --- ЛОГИКА ОПЛАТЫ И СВЯЗИ С БОТОМ ---
         async function startPaymentProcess() {
             if(tg.HapticFeedback) tg.HapticFeedback.impactOccurred('medium');
             
@@ -328,36 +331,26 @@
             const tokens = parseInt(selectedRadio.dataset.tokens);
 
             try {
-                // Ссылка от твоего Ngrok
+                // ВАЖНО: ВСТАВЬ СЮДА СВОЮ ССЫЛКУ NGROK ИЛИ СЕРВЕРА
                 const BACKEND_URL = 'https://overfull-ebony-frequency.ngrok-free.dev';
 
-                // 1. Отправляем запрос боту на генерацию чека ЮKassa (с обходом защиты ngrok)
                 const createRes = await fetch(`${BACKEND_URL}/api/create_payment`, {
                     method: 'POST',
-                    headers: { 
-                        'Content-Type': 'application/json',
-                        'ngrok-skip-browser-warning': 'true' // Исправляет ошибку сервера
-                    },
+                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ user_id: userId, price: price, tokens: tokens })
                 });
 
                 const data = await createRes.json();
                 if (!data.payment_url || !data.payment_id) throw new Error("Ошибка создания платежа");
 
-                // 2. Открываем ссылку на оплату в браузере
                 tg.openLink(data.payment_url);
                 statusMsg.innerText = 'Ожидание оплаты...';
                 
-                // 3. Цикл проверки. Каждые 3 секунды спрашиваем бота (с обходом защиты ngrok)
                 let isPaid = false;
                 while (!isPaid) {
                     await new Promise(r => setTimeout(r, 3000));
                     
-                    const checkRes = await fetch(`${BACKEND_URL}/api/check_payment?payment_id=${data.payment_id}`, {
-                        headers: {
-                            'ngrok-skip-browser-warning': 'true' // Исправляет ошибку сервера
-                        }
-                    });
+                    const checkRes = await fetch(`${BACKEND_URL}/api/check_payment?payment_id=${data.payment_id}`);
                     const checkData = await checkRes.json();
                     
                     if (checkData.status === 'succeeded') {
@@ -365,7 +358,6 @@
                     }
                 }
                 
-                // 4. Успех!
                 spinner.style.display = 'none';
                 successIcon.style.display = 'block';
                 statusMsg.innerText = 'Оплата прошла успешно';
